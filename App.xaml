@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Application
+    x:Class="todolist.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:todolist"
+    xmlns:converters="using:todolist.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Mint Green Accent Colors -->
+            <Color x:Key="MintGreenAccent">#3EB489</Color>
+            <Color x:Key="MintGreenAccentLight">#5BC9A0</Color>
+            <Color x:Key="MintGreenAccentDark">#2D9070</Color>
+            
+            <!-- Accent Brushes -->
+            <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource MintGreenAccent}" />
+            <SolidColorBrush x:Key="AccentBrushLight" Color="{StaticResource MintGreenAccentLight}" />
+            <SolidColorBrush x:Key="AccentBrushDark" Color="{StaticResource MintGreenAccentDark}" />
+            
+            <!-- Override System Accent Color -->
+            <SolidColorBrush x:Key="SystemAccentColor" Color="{StaticResource MintGreenAccent}" />
+            <SolidColorBrush x:Key="SystemAccentColorLight1" Color="{StaticResource MintGreenAccentLight}" />
+            <SolidColorBrush x:Key="SystemAccentColorDark1" Color="{StaticResource MintGreenAccentDark}" />
+            
+            <!-- Completed Task Style -->
+            <Style x:Key="CompletedTaskTextStyle" TargetType="TextBlock">
+                <Setter Property="TextDecorations" Value="Strikethrough" />
+                <Setter Property="Opacity" Value="0.6" />
+            </Style>
+            
+            <!-- Animation Duration -->
+            <x:Double x:Key="TaskAnimationDuration">250</x:Double>
+            
+            <!-- Converters -->
+            <converters:BoolToVisibilityInverterConverter x:Key="BoolToVisibilityInverterConverter" />
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <converters:CompletedOpacityConverter x:Key="CompletedOpacityConverter" />
+            <converters:CompletedTextDecorationConverter x:Key="CompletedTextDecorationConverter" />
+            
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

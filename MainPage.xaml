@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="todolist.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:todolist"
+    xmlns:models="using:todolist.Models"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="Transparent">
+
+    <Grid x:Name="RootGrid" Padding="0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Title Bar Area with CommandBar -->
+        <Grid Grid.Row="0" 
+              Background="{ThemeResource LayerFillColorDefaultBrush}"
+              Padding="16,8,16,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       Text="To-Do List"
+                       Style="{StaticResource TitleTextBlockStyle}"
+                       VerticalAlignment="Center"
+                       Foreground="{StaticResource AccentBrush}"
+                       AutomationProperties.HeadingLevel="Level1" />
+
+            <CommandBar Grid.Column="1"
+                        x:Name="MainCommandBar"
+                        DefaultLabelPosition="Right"
+                        Background="Transparent"
+                        IsOpen="False"
+                        OverflowButtonVisibility="Auto"
+                        AutomationProperties.Name="Task Actions">
+                <AppBarButton x:Name="AddCommandButton"
+                              Icon="Add"
+                              Label="Add"
+                              AccessKey="A"
+                              Command="{x:Bind ViewModel.AddTaskCommand}"
+                              AutomationProperties.Name="Add new task">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Enter" Modifiers="Control" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton x:Name="DeleteCommandButton"
+                              Icon="Delete"
+                              Label="Delete"
+                              AccessKey="D"
+                              Command="{x:Bind ViewModel.RemoveSelectedCommand}"
+                              AutomationProperties.Name="Delete selected task">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Delete" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+                <AppBarButton x:Name="ClearCompletedButton"
+                              Icon="Clear"
+                              Label="Clear Completed"
+                              AccessKey="L"
+                              Command="{x:Bind ViewModel.ClearCompletedCommand}"
+                              AutomationProperties.Name="Clear all completed tasks">
+                    <AppBarButton.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="L" Modifiers="Control" />
+                    </AppBarButton.KeyboardAccelerators>
+                </AppBarButton>
+            </CommandBar>
+        </Grid>
+
+        <!-- Input Panel -->
+        <Grid Grid.Row="1" 
+              Padding="16,12,16,12"
+              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox x:Name="NewTaskTextBox"
+                     Grid.Column="0"
+                     PlaceholderText="Add a new task..."
+                     Text="{x:Bind ViewModel.NewTaskText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     VerticalAlignment="Center"
+                     Margin="0,0,12,0"
+                     AutomationProperties.Name="New task input"
+                     AutomationProperties.HelpText="Type a new task and press Enter to add"
+                     KeyDown="NewTaskTextBox_KeyDown" />
+
+            <Button x:Name="AddButton"
+                    Grid.Column="1"
+                    Content="Add Task"
+                    Style="{StaticResource AccentButtonStyle}"
+                    Command="{x:Bind ViewModel.AddTaskCommand}"
+                    AutomationProperties.Name="Add task button"
+                    MinWidth="100" />
+        </Grid>
+
+        <!-- Task List -->
+        <ListView x:Name="TaskListView"
+                  Grid.Row="2"
+                  ItemsSource="{x:Bind ViewModel.Tasks, Mode=OneWay}"
+                  SelectedItem="{x:Bind ViewModel.SelectedTodoItem, Mode=TwoWay}"
+                  SelectionMode="Single"
+                  Padding="8,8,8,8"
+                  AutomationProperties.Name="Task list"
+                  AutomationProperties.HelpText="List of all tasks. Use arrow keys to navigate.">
+            
+            <!-- Enable virtualization for performance -->
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <ItemsStackPanel />
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+
+            <!-- Add/Remove animations -->
+            <ListView.ItemContainerTransitions>
+                <TransitionCollection>
+                    <AddDeleteThemeTransition />
+                    <ContentThemeTransition />
+                    <ReorderThemeTransition />
+                </TransitionCollection>
+            </ListView.ItemContainerTransitions>
+
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="models:TodoItem">
+                    <Grid Padding="8,12,8,12"
+                          AutomationProperties.Name="{x:Bind Title, Mode=OneWay}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Context Menu Flyout -->
+                        <Grid.ContextFlyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem Text="Mark Complete"
+                                                Icon="Accept"
+                                                Click="MarkComplete_Click"
+                                                AutomationProperties.Name="Mark task as complete" />
+                                <MenuFlyoutItem Text="Delete"
+                                                Icon="Delete"
+                                                Click="DeleteTask_Click"
+                                                AutomationProperties.Name="Delete this task" />
+                            </MenuFlyout>
+                        </Grid.ContextFlyout>
+
+                        <CheckBox Grid.Column="0"
+                                  IsChecked="{x:Bind IsCompleted, Mode=TwoWay}"
+                                  VerticalAlignment="Center"
+                                  Margin="0,0,12,0"
+                                  AutomationProperties.Name="Task completion checkbox" />
+
+                        <TextBlock Grid.Column="1"
+                                   Text="{x:Bind Title, Mode=OneWay}"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap"
+                                   Opacity="{x:Bind IsCompleted, Mode=OneWay, Converter={StaticResource CompletedOpacityConverter}}"
+                                   TextDecorations="{x:Bind IsCompleted, Mode=OneWay, Converter={StaticResource CompletedTextDecorationConverter}}" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!-- Empty State -->
+        <StackPanel Grid.Row="2"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Visibility="{x:Bind ViewModel.HasTasks, Mode=OneWay, Converter={StaticResource BoolToVisibilityInverterConverter}}"
+                    Spacing="16">
+            <FontIcon Glyph="&#xE73E;"
+                      FontSize="48"
+                      Foreground="{StaticResource AccentBrush}"
+                      HorizontalAlignment="Center" />
+            <TextBlock Text="No tasks yet"
+                       Style="{StaticResource SubtitleTextBlockStyle}"
+                       HorizontalAlignment="Center"
+                       Opacity="0.6" />
+            <TextBlock Text="Add a task above to get started"
+                       Style="{StaticResource BodyTextBlockStyle}"
+                       HorizontalAlignment="Center"
+                       Opacity="0.4" />
+        </StackPanel>
+
+        <!-- Status Bar -->
+        <Grid Grid.Row="3"
+              Padding="16,8,16,8"
+              Background="{ThemeResource LayerFillColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0"
+                       x:Name="TaskCountText"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       VerticalAlignment="Center"
+                       Opacity="0.6"
+                       AutomationProperties.LiveSetting="Polite" />
+
+            <Button Grid.Column="1"
+                    x:Name="RemoveSelectedButton"
+                    Content="Remove Selected"
+                    Command="{x:Bind ViewModel.RemoveSelectedCommand}"
+                    AutomationProperties.Name="Remove selected task button" />
+        </Grid>
+
+        <!-- Delete Confirmation Dialog (defined but hidden) -->
+        <ContentDialog x:Name="DeleteConfirmationDialog"
+                       Title="Delete Task?"
+                       PrimaryButtonText="Delete"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Close"
+                       AutomationProperties.Name="Delete confirmation dialog">
+            <TextBlock x:Name="DeleteDialogContent"
+                       TextWrapping="Wrap" />
+        </ContentDialog>
+    </Grid>
+</Page>
