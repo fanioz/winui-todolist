@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using todolist.Models;
 using todolist.Services;
 using todolist.ViewModels;
+using Xunit;
 
 namespace todolist.Tests
 {
@@ -293,5 +294,137 @@ namespace todolist.Tests
             // Assert
             Assert.True(_viewModel.RemoveSelectedCommand.CanExecute(null));
         }
+
+        #region Filter Tests
+
+        [Fact]
+        public void CurrentFilter_DefaultsToAll()
+        {
+            Assert.Equal(TaskFilter.All, _viewModel.CurrentFilter);
+        }
+
+        [Fact]
+        public void SetFilterCommand_ChangesCurrentFilter()
+        {
+            // Act
+            _viewModel.SetFilterCommand.Execute(TaskFilter.Active);
+
+            // Assert
+            Assert.Equal(TaskFilter.Active, _viewModel.CurrentFilter);
+        }
+
+        [Fact]
+        public async Task FilteredTasks_ShowsAll_WhenFilterIsAll()
+        {
+            // Arrange
+            _viewModel.NewTaskText = "Task 1";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+            _viewModel.NewTaskText = "Task 2";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+            _viewModel.Tasks[0].IsCompleted = true;
+
+            _viewModel.SetFilterCommand.Execute(TaskFilter.All);
+
+            // Assert
+            Assert.Equal(2, _viewModel.FilteredTasks.Count);
+        }
+
+        [Fact]
+        public async Task FilteredTasks_ShowsOnlyActive_WhenFilterIsActive()
+        {
+            // Arrange
+            _viewModel.NewTaskText = "Task 1";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+            _viewModel.NewTaskText = "Task 2";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+            _viewModel.NewTaskText = "Task 3";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+
+            _viewModel.Tasks[0].IsCompleted = true;
+            _viewModel.Tasks[2].IsCompleted = true;
+
+            // Act
+            _viewModel.SetFilterCommand.Execute(TaskFilter.Active);
+
+            // Assert
+            Assert.Single(_viewModel.FilteredTasks);
+            Assert.Equal("Task 2", _viewModel.FilteredTasks[0].Title);
+        }
+
+        [Fact]
+        public async Task FilteredTasks_ShowsOnlyCompleted_WhenFilterIsCompleted()
+        {
+            // Arrange
+            _viewModel.NewTaskText = "Task 1";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+            _viewModel.NewTaskText = "Task 2";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+            _viewModel.NewTaskText = "Task 3";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+
+            _viewModel.Tasks[0].IsCompleted = true;
+            _viewModel.Tasks[2].IsCompleted = true;
+
+            // Act
+            _viewModel.SetFilterCommand.Execute(TaskFilter.Completed);
+
+            // Assert
+            Assert.Equal(2, _viewModel.FilteredTasks.Count);
+        }
+
+        [Fact]
+        public async Task ActiveCount_ReturnsCorrectCount()
+        {
+            // Arrange
+            _viewModel.NewTaskText = "Task 1";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+            _viewModel.NewTaskText = "Task 2";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+            _viewModel.NewTaskText = "Task 3";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+
+            _viewModel.Tasks[0].IsCompleted = true;
+
+            // Assert
+            Assert.Equal(2, _viewModel.ActiveCount);
+        }
+
+        [Fact]
+        public async Task CompletedCount_ReturnsCorrectCount()
+        {
+            // Arrange
+            _viewModel.NewTaskText = "Task 1";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+            _viewModel.NewTaskText = "Task 2";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+            _viewModel.NewTaskText = "Task 3";
+            await _viewModel.AddTaskCommand.ExecuteAsync(null);
+
+            _viewModel.Tasks[0].IsCompleted = true;
+            _viewModel.Tasks[1].IsCompleted = true;
+
+            // Assert
+            Assert.Equal(2, _viewModel.CompletedCount);
+        }
+
+        [Fact]
+        public void ActiveCount_ReturnsZero_WhenEmpty()
+        {
+            Assert.Equal(0, _viewModel.ActiveCount);
+        }
+
+        [Fact]
+        public void CompletedCount_ReturnsZero_WhenEmpty()
+        {
+            Assert.Equal(0, _viewModel.CompletedCount);
+        }
+
+        [Fact]
+        public void FilteredTasks_ReturnsEmpty_WhenNoTasks()
+        {
+            Assert.Empty(_viewModel.FilteredTasks);
+        }
+
+        #endregion
     }
 }

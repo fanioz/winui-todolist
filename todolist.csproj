@@ -12,6 +12,8 @@
     <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
+    <!-- Exclude test project from default globbing -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);todolist.Tests\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>

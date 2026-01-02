@@ -14,6 +14,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -102,15 +103,63 @@
                     MinWidth="100" />
         </Grid>
 
+        <!-- Filter Bar -->
+        <Grid Grid.Row="2"
+              Padding="16,8,16,8"
+              Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                <RadioButton x:Name="FilterAllButton"
+                             Content="All"
+                             GroupName="TaskFilter"
+                             IsChecked="True"
+                             Click="FilterAll_Click"
+                             Style="{StaticResource DefaultRadioButtonStyle}"
+                             MinWidth="60"
+                             AutomationProperties.Name="Show all tasks" />
+                <RadioButton x:Name="FilterActiveButton"
+                             GroupName="TaskFilter"
+                             Click="FilterActive_Click"
+                             Style="{StaticResource DefaultRadioButtonStyle}"
+                             MinWidth="80"
+                             AutomationProperties.Name="Show active tasks">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Active" />
+                        <TextBlock Text="{x:Bind ViewModel.ActiveCount, Mode=OneWay}"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   FontWeight="SemiBold" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton x:Name="FilterCompletedButton"
+                             GroupName="TaskFilter"
+                             Click="FilterCompleted_Click"
+                             Style="{StaticResource DefaultRadioButtonStyle}"
+                             MinWidth="100"
+                             AutomationProperties.Name="Show completed tasks">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Completed" />
+                        <TextBlock Text="{x:Bind ViewModel.CompletedCount, Mode=OneWay}"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   FontWeight="SemiBold" />
+                    </StackPanel>
+                </RadioButton>
+            </StackPanel>
+        </Grid>
+
         <!-- Task List -->
         <ListView x:Name="TaskListView"
-                  Grid.Row="2"
-                  ItemsSource="{x:Bind ViewModel.Tasks, Mode=OneWay}"
+                  Grid.Row="3"
+                  ItemsSource="{x:Bind ViewModel.FilteredTasks, Mode=OneWay}"
                   SelectedItem="{x:Bind ViewModel.SelectedTodoItem, Mode=TwoWay}"
                   SelectionMode="Single"
                   Padding="8,8,8,8"
                   AutomationProperties.Name="Task list"
-                  AutomationProperties.HelpText="List of all tasks. Use arrow keys to navigate.">
+                  AutomationProperties.HelpText="List of tasks. Use arrow keys to navigate.">
             
             <!-- Enable virtualization for performance -->
             <ListView.ItemsPanel>
@@ -169,7 +218,7 @@
         </ListView>
 
         <!-- Empty State -->
-        <StackPanel Grid.Row="2"
+        <StackPanel Grid.Row="3"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Visibility="{x:Bind ViewModel.HasTasks, Mode=OneWay, Converter={StaticResource BoolToVisibilityInverterConverter}}"
@@ -189,7 +238,7 @@
         </StackPanel>
 
         <!-- Status Bar -->
-        <Grid Grid.Row="3"
+        <Grid Grid.Row="4"
               Padding="16,8,16,8"
               Background="{ThemeResource LayerFillColorDefaultBrush}">
             <Grid.ColumnDefinitions>

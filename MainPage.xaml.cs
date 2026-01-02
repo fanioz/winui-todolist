@@ -130,5 +130,29 @@ namespace todolist
                 }
             }
         }
+
+        /// <summary>
+        /// Handles "All" filter button click.
+        /// </summary>
+        private void FilterAll_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.SetFilterCommand.Execute(TaskFilter.All);
+        }
+
+        /// <summary>
+        /// Handles "Active" filter button click.
+        /// </summary>
+        private void FilterActive_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.SetFilterCommand.Execute(TaskFilter.Active);
+        }
+
+        /// <summary>
+        /// Handles "Completed" filter button click.
+        /// </summary>
+        private void FilterCompleted_Click(object sender, RoutedEventArgs e)
+        {
+            ViewModel.SetFilterCommand.Execute(TaskFilter.Completed);
+        }
     }
 }

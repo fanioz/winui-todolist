@@ -44,6 +44,13 @@ namespace todolist.ViewModels
         private bool _isLoading;
 
         /// <summary>
+        /// Current filter selection.
+        /// </summary>
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredTasks))]
+        private TaskFilter _currentFilter = TaskFilter.All;
+
+        /// <summary>
         /// Indicates if there are any completed tasks.
         /// </summary>
         public bool HasCompletedTasks => Tasks.Any(t => t.IsCompleted);
@@ -53,6 +60,33 @@ namespace todolist.ViewModels
         /// </summary>
         public bool HasTasks => Tasks.Count > 0;
 
+        /// <summary>
+        /// Gets the count of active (incomplete) tasks.
+        /// </summary>
+        public int ActiveCount => Tasks.Count(t => !t.IsCompleted);
+
+        /// <summary>
+        /// Gets the count of completed tasks.
+        /// </summary>
+        public int CompletedCount => Tasks.Count(t => t.IsCompleted);
+
+        /// <summary>
+        /// Gets the filtered list of tasks based on CurrentFilter.
+        /// </summary>
+        public ObservableCollection<TodoItem> FilteredTasks
+        {
+            get
+            {
+                var filtered = CurrentFilter switch
+                {
+                    TaskFilter.Active => Tasks.Where(t => !t.IsCompleted),
+                    TaskFilter.Completed => Tasks.Where(t => t.IsCompleted),
+                    _ => Tasks
+                };
+                return new ObservableCollection<TodoItem>(filtered);
+            }
+        }
+
         // Commands
         public IAsyncRelayCommand LoadTasksCommand { get; }
         public IAsyncRelayCommand AddTaskCommand { get; }
@@ -60,6 +94,7 @@ namespace todolist.ViewModels
         public IRelayCommand<TodoItem> ToggleCompleteCommand { get; }
         public IAsyncRelayCommand ClearCompletedCommand { get; }
         public IAsyncRelayCommand RemoveSelectedCommand { get; }
+        public IRelayCommand<TaskFilter> SetFilterCommand { get; }
 
         public TodoViewModel(ILocalStorageService storageService)
         {
@@ -72,14 +107,23 @@ namespace todolist.ViewModels
             ToggleCompleteCommand = new RelayCommand<TodoItem>(ToggleComplete);
             ClearCompletedCommand = new AsyncRelayCommand(ClearCompletedAsync, () => HasCompletedTasks);
             RemoveSelectedCommand = new AsyncRelayCommand(RemoveSelectedAsync, CanRemoveSelected);
+            SetFilterCommand = new RelayCommand<TaskFilter>(SetFilter);
 
-            // Subscribe to collection changes to update HasCompletedTasks
+            // Subscribe to collection changes to update computed properties
             Tasks.CollectionChanged += (s, e) =>
             {
                 OnPropertyChanged(nameof(HasCompletedTasks));
                 OnPropertyChanged(nameof(HasTasks));
+                OnPropertyChanged(nameof(ActiveCount));
+                OnPropertyChanged(nameof(CompletedCount));
+                OnPropertyChanged(nameof(FilteredTasks));
                 ClearCompletedCommand.NotifyCanExecuteChanged();
             };
+        }
+
+        private void SetFilter(TaskFilter filter)
+        {
+            CurrentFilter = filter;
         }
 
         private bool CanAddTask() => !string.IsNullOrWhiteSpace(NewTaskText);
@@ -194,6 +238,9 @@ namespace todolist.ViewModels
             if (e.PropertyName == nameof(TodoItem.IsCompleted))
             {
                 OnPropertyChanged(nameof(HasCompletedTasks));
+                OnPropertyChanged(nameof(ActiveCount));
+                OnPropertyChanged(nameof(CompletedCount));
+                OnPropertyChanged(nameof(FilteredTasks));
                 ClearCompletedCommand.NotifyCanExecuteChanged();
             }
             
