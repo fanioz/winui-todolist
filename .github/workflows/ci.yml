@@ -1,0 +1,124 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [master, main]
+    tags:
+      - "v*" # Trigger on version tags like v1.0.0
+  pull_request:
+    branches: [master, main]
+
+env:
+  DOTNET_VERSION: "8.0.x"
+  SOLUTION_FILE: "todolist.slnx"
+  PLATFORM: "x64"
+  CONFIGURATION: "Release"
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.SOLUTION_FILE }}
+
+      - name: Build
+        run: dotnet build ${{ env.SOLUTION_FILE }} --configuration ${{ env.CONFIGURATION }} -p:Platform=${{ env.PLATFORM }} --no-restore
+
+      - name: Run Tests
+        run: dotnet test todolist.Tests/todolist.Tests.csproj --configuration ${{ env.CONFIGURATION }} -p:Platform=${{ env.PLATFORM }} --no-build --verbosity normal
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: todolist-${{ env.PLATFORM }}-${{ env.CONFIGURATION }}
+          path: bin/${{ env.PLATFORM }}/${{ env.CONFIGURATION }}/
+          retention-days: 30
+
+  # Build for multiple platforms
+  build-matrix:
+    runs-on: windows-latest
+    needs: build
+    strategy:
+      matrix:
+        platform: [x64, ARM64]
+        configuration: [Release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore dependencies
+        run: dotnet restore todolist.csproj
+
+      - name: Build ${{ matrix.platform }}
+        run: dotnet build todolist.csproj --configuration ${{ matrix.configuration }} -p:Platform=${{ matrix.platform }} --no-restore
+
+      - name: Create ZIP archive
+        run: Compress-Archive -Path "bin/${{ matrix.platform }}/${{ matrix.configuration }}/*" -DestinationPath "todolist-${{ matrix.platform }}.zip"
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: todolist-${{ matrix.platform }}-${{ matrix.configuration }}
+          path: todolist-${{ matrix.platform }}.zip
+          retention-days: 30
+
+  # Create GitHub Release on tag push
+  release:
+    runs-on: windows-latest
+    needs: build-matrix
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download x64 Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: todolist-x64-Release
+          path: ./artifacts/x64
+
+      - name: Download ARM64 Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: todolist-ARM64-Release
+          path: ./artifacts/arm64
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: To-Do List ${{ github.ref_name }}
+          body: |
+            ## To-Do List ${{ github.ref_name }}
+
+            ### Downloads
+            - **x64**: For standard Windows PCs
+            - **ARM64**: For ARM-based Windows devices (Surface Pro X, etc.)
+
+            ### What's New
+            See [README](https://github.com/${{ github.repository }}/blob/main/README.md) for features.
+          draft: false
+          prerelease: false
+          files: |
+            ./artifacts/x64/*.zip
+            ./artifacts/arm64/*.zip
