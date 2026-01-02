@@ -95,6 +95,7 @@ namespace todolist.ViewModels
         public IAsyncRelayCommand ClearCompletedCommand { get; }
         public IAsyncRelayCommand RemoveSelectedCommand { get; }
         public IRelayCommand<TaskFilter> SetFilterCommand { get; }
+        public IAsyncRelayCommand<(TodoItem task, string newTitle)> UpdateTaskCommand { get; }
 
         public TodoViewModel(ILocalStorageService storageService)
         {
@@ -108,6 +109,7 @@ namespace todolist.ViewModels
             ClearCompletedCommand = new AsyncRelayCommand(ClearCompletedAsync, () => HasCompletedTasks);
             RemoveSelectedCommand = new AsyncRelayCommand(RemoveSelectedAsync, CanRemoveSelected);
             SetFilterCommand = new RelayCommand<TaskFilter>(SetFilter);
+            UpdateTaskCommand = new AsyncRelayCommand<(TodoItem task, string newTitle)>(UpdateTaskAsync);
 
             // Subscribe to collection changes to update computed properties
             Tasks.CollectionChanged += (s, e) =>
@@ -124,6 +126,20 @@ namespace todolist.ViewModels
         private void SetFilter(TaskFilter filter)
         {
             CurrentFilter = filter;
+        }
+
+        /// <summary>
+        /// Updates a task's title.
+        /// </summary>
+        private async Task UpdateTaskAsync((TodoItem task, string newTitle) args)
+        {
+            if (args.task == null || string.IsNullOrWhiteSpace(args.newTitle)) return;
+            
+            args.task.Title = args.newTitle.Trim();
+            await SaveTasksAsync();
+            
+            // Refresh filtered list in case title affects display
+            OnPropertyChanged(nameof(FilteredTasks));
         }
 
         private bool CanAddTask() => !string.IsNullOrWhiteSpace(NewTaskText);

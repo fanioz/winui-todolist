@@ -154,5 +154,27 @@ namespace todolist
         {
             ViewModel.SetFilterCommand.Execute(TaskFilter.Completed);
         }
+
+        /// <summary>
+        /// Handles "Edit" context menu click with edit dialog.
+        /// </summary>
+        private async void EditTask_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuFlyoutItem menuItem &&
+                menuItem.DataContext is TodoItem task)
+            {
+                // Pre-fill the dialog with current title
+                EditTaskTextBox.Text = task.Title;
+                EditTaskDialog.XamlRoot = this.XamlRoot;
+                
+                var result = await EditTaskDialog.ShowAsync();
+                
+                if (result == ContentDialogResult.Primary && 
+                    !string.IsNullOrWhiteSpace(EditTaskTextBox.Text))
+                {
+                    await ViewModel.UpdateTaskCommand.ExecuteAsync((task, EditTaskTextBox.Text));
+                }
+            }
+        }
     }
 }

@@ -14,6 +14,7 @@ A professional, desktop-first To-Do List application built with WinUI 3 and .NET
 - **Task Management**:
   - Context menu (right-click) for quick actions.
   - Checkbox toggles for task completion with strikethrough styling.
+  - **Edit tasks** via dialog (right-click → Edit).
   - Delete confirmation dialogs to prevent accidental loss.
   - Status bar showing completion progress.
 - **Task Filtering**: Filter tasks by All, Active, or Completed with live counts.

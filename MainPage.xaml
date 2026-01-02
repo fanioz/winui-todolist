@@ -189,10 +189,15 @@
                         <!-- Context Menu Flyout -->
                         <Grid.ContextFlyout>
                             <MenuFlyout>
+                                <MenuFlyoutItem Text="Edit"
+                                                Icon="Edit"
+                                                Click="EditTask_Click"
+                                                AutomationProperties.Name="Edit this task" />
                                 <MenuFlyoutItem Text="Mark Complete"
                                                 Icon="Accept"
                                                 Click="MarkComplete_Click"
                                                 AutomationProperties.Name="Mark task as complete" />
+                                <MenuFlyoutSeparator />
                                 <MenuFlyoutItem Text="Delete"
                                                 Icon="Delete"
                                                 Click="DeleteTask_Click"
@@ -260,7 +265,7 @@
                     AutomationProperties.Name="Remove selected task button" />
         </Grid>
 
-        <!-- Delete Confirmation Dialog (defined but hidden) -->
+        <!-- Delete Confirmation Dialog -->
         <ContentDialog x:Name="DeleteConfirmationDialog"
                        Title="Delete Task?"
                        PrimaryButtonText="Delete"
@@ -269,6 +274,19 @@
                        AutomationProperties.Name="Delete confirmation dialog">
             <TextBlock x:Name="DeleteDialogContent"
                        TextWrapping="Wrap" />
+        </ContentDialog>
+
+        <!-- Edit Task Dialog -->
+        <ContentDialog x:Name="EditTaskDialog"
+                       Title="Edit Task"
+                       PrimaryButtonText="Save"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary"
+                       AutomationProperties.Name="Edit task dialog">
+            <TextBox x:Name="EditTaskTextBox"
+                     PlaceholderText="Task title"
+                     Width="300"
+                     AutomationProperties.Name="Task title input" />
         </ContentDialog>
     </Grid>
 </Page>
