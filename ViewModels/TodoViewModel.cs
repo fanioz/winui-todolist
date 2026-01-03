@@ -71,6 +71,35 @@ namespace todolist.ViewModels
         public int CompletedCount => Tasks.Count(t => t.IsCompleted);
 
         /// <summary>
+        /// The currently active progress operation being displayed.
+        /// </summary>
+        [ObservableProperty]
+        private ProgressOperation? _currentOperation;
+
+        /// <summary>
+        /// Indicates if the progress dashboard should be visible.
+        /// </summary>
+        [ObservableProperty]
+        private bool _isDashboardVisible;
+
+        /// <summary>
+        /// Overall progress percentage for the current operation (0-100).
+        /// </summary>
+        [ObservableProperty]
+        private double _overallProgress;
+
+        /// <summary>
+        /// Status message displayed in the dashboard.
+        /// </summary>
+        [ObservableProperty]
+        private string _dashboardStatusMessage = "Ready";
+
+        /// <summary>
+        /// Collection of active/queued progress operations.
+        /// </summary>
+        public ObservableCollection<ProgressOperation> ActiveOperations { get; } = new();
+
+        /// <summary>
         /// Gets the filtered list of tasks based on CurrentFilter.
         /// </summary>
         public ObservableCollection<TodoItem> FilteredTasks
@@ -155,15 +184,37 @@ namespace todolist.ViewModels
             try
             {
                 IsLoading = true;
-                var loadedTasks = await _storageService.LoadTasksAsync();
-                
-                Tasks.Clear();
-                foreach (var task in loadedTasks.OrderByDescending(t => t.CreatedAt))
-                {
-                    // Subscribe to property changes for auto-save
-                    task.PropertyChanged += Task_PropertyChanged;
-                    Tasks.Add(task);
-                }
+
+                await ExecuteWithProgressAsync(
+                    OperationType.LoadTasks,
+                    "Loading tasks...",
+                    async (progressOp) =>
+                    {
+                        // Stage 0: Locating
+                        AdvanceStage(progressOp, 0);
+                        await Task.Delay(300);
+
+                        // Stage 1: Loading
+                        AdvanceStage(progressOp, 1);
+                        await Task.Delay(400);
+                        var loadedTasks = await _storageService.LoadTasksAsync();
+
+                        // Stage 2: Preparing
+                        AdvanceStage(progressOp, 2);
+                        await Task.Delay(300);
+                        Tasks.Clear();
+                        foreach (var task in loadedTasks.OrderByDescending(t => t.CreatedAt))
+                        {
+                            task.PropertyChanged += Task_PropertyChanged;
+                            Tasks.Add(task);
+                        }
+
+                        // Stage 3: Ready
+                        AdvanceStage(progressOp, 3);
+                        await Task.Delay(200);
+
+                        return true;
+                    });
             }
             finally
             {
@@ -178,14 +229,43 @@ namespace todolist.ViewModels
         {
             if (string.IsNullOrWhiteSpace(NewTaskText)) return;
 
-            var newTask = TodoItem.Create(NewTaskText.Trim());
-            newTask.PropertyChanged += Task_PropertyChanged;
-            
-            // Insert at the beginning for newest-first order
-            Tasks.Insert(0, newTask);
-            NewTaskText = string.Empty;
+            await ExecuteWithProgressAsync(
+                OperationType.AddTask,
+                "Adding new task...",
+                async (progressOp) =>
+                {
+                    // Stage 0: Validating
+                    AdvanceStage(progressOp, 0);
+                    await Task.Delay(300); // Brief validation simulation
 
-            await SaveTasksAsync();
+                    var taskTitle = NewTaskText.Trim();
+
+                    // Stage 1: Creating
+                    AdvanceStage(progressOp, 1);
+                    await Task.Delay(400);
+                    var newTask = TodoItem.Create(taskTitle);
+                    newTask.PropertyChanged += Task_PropertyChanged;
+
+                    // Stage 2: Adding to list
+                    AdvanceStage(progressOp, 2);
+                    await Task.Delay(300);
+                    Tasks.Insert(0, newTask);
+                    NewTaskText = string.Empty;
+
+                    // Stage 3: Saving
+                    AdvanceStage(progressOp, 3);
+                    await SaveTasksInternalAsync();
+
+                    return true;
+                });
+        }
+
+        /// <summary>
+        /// Internal save method without progress tracking.
+        /// </summary>
+        private async Task SaveTasksInternalAsync()
+        {
+            await _storageService.SaveTasksAsync(Tasks);
         }
 
         /// <summary>
@@ -264,11 +344,76 @@ namespace todolist.ViewModels
         }
 
         /// <summary>
-        /// Saves all tasks to local storage.
+        /// Saves all tasks to local storage with progress tracking.
         /// </summary>
         private async Task SaveTasksAsync()
         {
-            await _storageService.SaveTasksAsync(Tasks);
+            await ExecuteWithProgressAsync(
+                OperationType.SaveTasks,
+                "Saving changes...",
+                async (progressOp) =>
+                {
+                    // Stage 0: Preparing
+                    AdvanceStage(progressOp, 0);
+                    await Task.Delay(300);
+
+                    // Stage 1: Writing
+                    AdvanceStage(progressOp, 1);
+                    await Task.Delay(300);
+                    await SaveTasksInternalAsync();
+
+                    // Stage 2: Saved
+                    AdvanceStage(progressOp, 2);
+                    await Task.Delay(200);
+
+                    return true;
+                });
+        }
+
+        /// <summary>
+        /// Executes an operation with progress tracking visualization.
+        /// </summary>
+        private async Task<T> ExecuteWithProgressAsync<T>(
+            OperationType operationType,
+            string description,
+            Func<ProgressOperation, Task<T>> operation)
+        {
+            var progressOp = new ProgressOperation(operationType, description);
+
+            CurrentOperation = progressOp;
+            IsDashboardVisible = true;
+            DashboardStatusMessage = description;
+
+            try
+            {
+                var result = await operation(progressOp);
+
+                // Mark as completed and show final state
+                progressOp.MarkCompleted();
+                OverallProgress = 100;
+
+                // Show completion for 2 seconds before dismissing
+                await Task.Delay(2000);
+
+                return result;
+            }
+            finally
+            {
+                IsDashboardVisible = false;
+                CurrentOperation = null;
+                OverallProgress = 0;
+                DashboardStatusMessage = "Ready";
+            }
+        }
+
+        /// <summary>
+        /// Advances the progress operation to a specific stage.
+        /// </summary>
+        private void AdvanceStage(ProgressOperation operation, int stageIndex)
+        {
+            operation.AdvanceToStage(stageIndex);
+            OverallProgress = operation.GetOverallProgress();
+            OnPropertyChanged(nameof(CurrentOperation));
         }
     }
 }

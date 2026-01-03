@@ -53,7 +53,107 @@ namespace todolist
             {
                 UpdateTaskCount();
             }
+
+            // Progress dashboard handling
+            // TODO: Uncomment when dashboard UI is added
+            // if (e.PropertyName == nameof(ViewModel.IsDashboardVisible))
+            // {
+            //     ProgressDashboard.Visibility = ViewModel.IsDashboardVisible
+            //         ? Visibility.Visible
+            //         : Visibility.Collapsed;
+            // }
+            //
+            // if (e.PropertyName == nameof(ViewModel.CurrentOperation))
+            // {
+            //     UpdateDashboard();
+            // }
+            //
+            // if (e.PropertyName == nameof(ViewModel.OverallProgress))
+            // {
+            //     OverallProgressBar.Value = ViewModel.OverallProgress;
+            // }
+            //
+            // if (e.PropertyName == nameof(ViewModel.DashboardStatusMessage))
+            // {
+            //     DashboardStatusText.Text = ViewModel.DashboardStatusMessage;
+            // }
         }
+
+        // TODO: Uncomment when dashboard UI is added
+        // /// <summary>
+        // /// Updates the progress dashboard with current operation data.
+        // /// </summary>
+        // private void UpdateDashboard()
+        // {
+        //     StageCardsPanel.Children.Clear();
+        //
+        //     if (ViewModel.CurrentOperation == null)
+        //     {
+        //         DashboardProgressRing.IsActive = false;
+        //         return;
+        //     }
+        //
+        //     DashboardProgressRing.IsActive = !ViewModel.CurrentOperation.IsCompleted;
+        //
+        //     // Create stage cards programmatically
+        //     foreach (var stage in ViewModel.CurrentOperation.Stages)
+        //     {
+        //         var card = new Border
+        //         {
+        //             Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["LayerFillColorDefaultBrush"],
+        //             CornerRadius = new CornerRadius(8),
+        //             Padding = new Thickness(16, 12, 16, 12),
+        //             Width = 140,
+        //             BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
+        //             BorderThickness = new Thickness(1),
+        //             Tag = stage
+        //         };
+        //
+        //         var stackPanel = new StackPanel { Spacing = 8 };
+        //
+        //         var icon = new FontIcon
+        //         {
+        //             Glyph = stage.Icon,
+        //             FontSize = 24,
+        //             HorizontalAlignment = Microsoft.UI.Xaml.HorizontalAlignment.Center,
+        //             Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["AccentBrush"]
+        //         };
+        //         stackPanel.Children.Add(icon);
+        //
+        //         var label = new TextBlock
+        //         {
+        //             Text = stage.Label,
+        //             Style = (Microsoft.UI.Xaml.Style)Application.Current.Resources["CaptionTextBlockStyle"],
+        //             TextAlignment = Microsoft.UI.Xaml.TextAlignment.Center,
+        //             FontWeight = Microsoft.UI.Xaml.FontWeights.SemiBold
+        //         };
+        //         stackPanel.Children.Add(label);
+        //
+        //         var progressBar = new ProgressBar
+        //         {
+        //             Value = stage.ProgressValue,
+        //             Maximum = 100,
+        //             Height = 4,
+        //             CornerRadius = new CornerRadius(2)
+        //         };
+        //
+        //         stage.PropertyChanged += (s, e) =>
+        //         {
+        //             if (e.PropertyName == nameof(Models.ProgressStage.ProgressValue))
+        //             {
+        //                 progressBar.Value = stage.ProgressValue;
+        //             }
+        //             if (e.PropertyName == nameof(Models.ProgressStage.Label))
+        //             {
+        //                 label.Text = stage.Label;
+        //             }
+        //         };
+        //
+        //         stackPanel.Children.Add(progressBar);
+        //         card.Child = stackPanel;
+        //         StageCardsPanel.Children.Add(card);
+        //     }
+        // }
 
         /// <summary>
         /// Handles collection changes for task count updates.
