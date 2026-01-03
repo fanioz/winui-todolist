@@ -60,7 +60,7 @@
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
   </PropertyGroup>
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(CI)' != 'true'">
     <PackageCertificateThumbprint>512958BB6281C1802C500657C08A56FC8EE33249</PackageCertificateThumbprint>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
   </PropertyGroup>
