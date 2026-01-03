@@ -25,6 +25,8 @@
     <!-- Compile shared files from main project -->
     <Compile Include="..\Models\TodoItem.cs" Link="Models\TodoItem.cs" />
     <Compile Include="..\Models\TaskFilter.cs" Link="Models\TaskFilter.cs" />
+    <Compile Include="..\Models\ProgressOperation.cs" Link="Models\ProgressOperation.cs" />
+    <Compile Include="..\Models\ProgressStage.cs" Link="Models\ProgressStage.cs" />
     <Compile Include="..\ViewModels\TodoViewModel.cs" Link="ViewModels\TodoViewModel.cs" />
     <Compile Include="..\Services\ILocalStorageService.cs" Link="Services\ILocalStorageService.cs" />
   </ItemGroup>

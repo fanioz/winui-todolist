@@ -1,6 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Media;
 using System;
 
 namespace todolist.Models
@@ -64,13 +62,45 @@ namespace todolist.Models
 
         /// <summary>
         /// Gets the brush color for this stage based on its state.
+        /// Returns null in non-UI contexts (e.g., unit tests).
+        /// Uses reflection to avoid UI type dependencies in test projects.
         /// </summary>
-        public Brush Brush => (Application.Current.Resources) switch
+        public object? Brush
         {
-            var r when IsCompleted => (Brush)r["SuccessBrush"],
-            var r when IsActive => (Brush)r["AccentBrush"],
-            _ => (Brush)Application.Current.Resources["TextFillColorTertiaryBrush"]
-        };
+            get
+            {
+                try
+                {
+                    var appType = System.Type.GetType("Microsoft.UI.Xaml.Application, Microsoft.WinUI.Runtime, Version=8.0.0.0, Culture=neutral, PublicKeyToken=null");
+                    if (appType == null) return null;
+
+                    var currentProp = appType.GetProperty("Current");
+                    if (currentProp == null) return null;
+
+                    var current = currentProp.GetValue(null);
+                    if (current == null) return null;
+
+                    var resourcesProp = current.GetType().GetProperty("Resources");
+                    if (resourcesProp == null) return null;
+
+                    var resources = resourcesProp.GetValue(current);
+                    if (resources == null) return null;
+
+                    var indexGetter = resources.GetType().GetProperty("Item");
+                    if (indexGetter == null) return null;
+
+                    string brushKey = IsCompleted ? "SuccessBrush" :
+                                     IsActive ? "AccentBrush" :
+                                     "TextFillColorTertiaryBrush";
+
+                    return indexGetter.GetValue(resources, new object[] { brushKey });
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
 
         /// <summary>
         /// Creates a new ProgressStage with the specified type and label.

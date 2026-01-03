@@ -9,6 +9,7 @@ on:
     branches: [master, main]
 
 env:
+  CI: "true"
   DOTNET_VERSION: "8.0.x"
   SOLUTION_FILE: "todolist.slnx"
   PLATFORM: "x64"
