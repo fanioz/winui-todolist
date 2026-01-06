@@ -40,13 +40,6 @@ jobs:
       - name: Run Tests
         run: dotnet test todolist.Tests/todolist.Tests.csproj --configuration ${{ env.CONFIGURATION }} -p:Platform=${{ env.PLATFORM }} --no-build --verbosity normal
 
-      - name: Upload Build Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: todolist-${{ env.PLATFORM }}-${{ env.CONFIGURATION }}
-          path: bin/${{ env.PLATFORM }}/${{ env.CONFIGURATION }}/
-          retention-days: 30
-
   # Build for multiple platforms
   build-matrix:
     runs-on: windows-latest
